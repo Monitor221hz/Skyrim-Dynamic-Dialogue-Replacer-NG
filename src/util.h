@@ -137,6 +137,8 @@ namespace Util
 			return { range.begin(), range.end() };
 		}
 
+
+
         static bool iContains(std::string_view a_str1, std::string_view a_str2)
 		{
 			if (a_str2.length() > a_str1.length()) {
@@ -280,35 +282,6 @@ namespace ObjectUtil
     };
 }
 
-namespace PerkUtil {
-    struct EntryVisitor : public RE::PerkEntryVisitor {
-    public:
-        explicit EntryVisitor(RE::Actor* a_actor) {
-            actor_ = a_actor;
-            result_ = 0;
-        }
-
-        ReturnType Visit(RE::BGSPerkEntry* perk_entry) override {
-            const auto* entry_point = static_cast<RE::BGSEntryPointPerkEntry*>(perk_entry);
-            // const auto* perk = entry_point->perk;
-            
-            if (entry_point->functionData &&
-                entry_point->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kMultiplyValue) {
-                const RE::BGSEntryPointFunctionDataOneValue* value =
-                    static_cast<RE::BGSEntryPointFunctionDataOneValue*>(entry_point->functionData);
-                result_ = value->data;
-            }
-
-            return ReturnType::kContinue;
-        }
-
-        [[nodiscard]] float get_result() const { return result_; }
-
-    private:
-        RE::Actor* actor_;
-        float result_;
-    };
-}
 
 namespace AnimUtil
 {
@@ -336,36 +309,96 @@ namespace FormUtil
             if (!modname.length() || !formid)
                 return nullptr;
             RE::TESDataHandler *dh = RE::TESDataHandler::GetSingleton();
-            RE::TESFile *modFile = nullptr;
-            for (auto it = dh->files.begin(); it != dh->files.end(); ++it)
-            {
-                RE::TESFile *f = *it;
-                if (strcmp(f->fileName, modname.c_str()) == 0)
-                {
-                    modFile = f;
-                    break;
-                }
+            return dh->LookupForm(formid, modname); 
+            // RE::TESFile *modFile = nullptr;
+            // for (auto it = dh->files.begin(); it != dh->files.end(); ++it)
+            // {
+            //     RE::TESFile *f = *it;
+            //     if (strcmp(f->fileName, modname.c_str()) == 0)
+            //     {
+            //         modFile = f;
+            //         break;
+            //     }
+            // }
+            // if (!modFile)
+            //     return nullptr;
+            // uint8_t modIndex = modFile->compileIndex;
+            // uint32_t id = formid;
+            // if (modIndex < 0xFE)
+            // {
+            //     id |= ((uint32_t)modIndex) << 24;
+            // }
+            // else
+            // {
+            //     uint16_t lightModIndex = modFile->smallFileCompileIndex;
+            //     if (lightModIndex != 0xFFFF)
+            //     {
+            //         id |= 0xFE000000 | (uint32_t(lightModIndex) << 12);
+            //     }
+            // }
+            // return RE::TESForm::LookupByID(id);
             }
-            if (!modFile)
+
+            static RE::TESForm *GetFormFromMod(std::string modname, std::string formIDString)
+            {
+                if (formIDString.length() == 0) return nullptr; 
+
+                uint32_t formID = std::stoi(formIDString, 0, 16); 
+                return GetFormFromMod(modname,formID); 
+            } 
+
+            static RE::TESForm *GetFormFromConfigString(std::string str, std::string_view delimiter)
+            {
+                std::vector<std::string> splitData = Util::String::Split(str, delimiter); 
+                if (splitData.size() < 2) return nullptr;  
+                return GetFormFromMod(splitData[1], splitData[0]);
+            }
+            static RE::TESForm *GetFormFromConfigString(std::string str)
+            {
+                return GetFormFromConfigString(str, "~"sv); 
+            }
+
+            static RE::FormID GetFormIDFromMod(std::string relativeFormIDString, std::string modName)
+            {
+                if (relativeFormIDString.length() == 0) return -1; 
+
+
+                uint32_t relativeFormID = std::stoi(relativeFormIDString,  0, 16); 
+                auto* dataHandler = TESDataHandler::GetSingleton(); 
+
+                if (!dataHandler) return -1; 
+
+                return dataHandler->LookupFormID(relativeFormID, modName); 
+            }
+
+            static RE::FormID GetFormIDFromConfigString(std::string str, std::string_view delimiter)
+            {
+                std::vector<std::string> splitData = Util::String::Split(str, delimiter); 
+                if (splitData.size() < 2) return -1; 
+                return GetFormIDFromMod(splitData[0], splitData[1]);
+            }
+            static RE::FormID GetFormIDFromConfigString(std::string str)
+            {
+                return GetFormIDFromConfigString(str, "~"sv); 
+            }
+
+
+    };
+
+    struct Quest 
+    {
+        public:
+            static BGSBaseAlias *FindAliasByName(std::string_view name, TESQuest *owningQuest)
+            {
+                RE::BSWriteLockGuard AliasLock{owningQuest->aliasAccessLock};
+                for (auto *alias : owningQuest->aliases)
+                {
+                std::string aliasName = alias->aliasName.c_str();
+                if (aliasName == name)
+                    return alias;
+                }
                 return nullptr;
-            uint8_t modIndex = modFile->compileIndex;
-            uint32_t id = formid;
-            if (modIndex < 0xFE)
-            {
-                id |= ((uint32_t)modIndex) << 24;
             }
-            else
-            {
-                uint16_t lightModIndex = modFile->smallFileCompileIndex;
-                if (lightModIndex != 0xFFFF)
-                {
-                    id |= 0xFE000000 | (uint32_t(lightModIndex) << 12);
-                }
-            }
-            return RE::TESForm::LookupByID(id);
-            }
-
-
     };
 }
 namespace NifUtil
