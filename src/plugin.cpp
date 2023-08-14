@@ -38,5 +38,6 @@ SKSEPluginLoad(const SKSE::LoadInterface *skse) {
 	// Hooks::InstallResponseHook(); 
 	VoicePathHook::Install(); 
 	ResponseHook::Install(); 
+	SubtitleHook::Install(); 
     return true;
 }

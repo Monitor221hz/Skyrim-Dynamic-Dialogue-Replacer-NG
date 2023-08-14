@@ -14,8 +14,8 @@ namespace DDR
         if (info == -1) SKSE::log::info("Could not find topicInfo record"); 
         uint8_t index = jsonObject["responseIndex"];  
 
-        std::string overridePath = jsonObject["overridePath"]; 
-        
+        std::string overridePath = jsonObject.contains("overridePath") ? jsonObject["overridePath"] : ""; 
+        std::string overrideSubtitle = jsonObject.contains("overrideSubtitle") ? jsonObject["overrideSubtitle"] : ""; 
         for (auto &entry : voiceNameArray)
         {
             
@@ -23,7 +23,7 @@ namespace DDR
             voiceType = (voiceType == -1 && entry.contains('~')) ? FormUtil::Form::GetFormIDFromConfigString(entry): voiceType; 
 
                 
-            responses.emplace_back(UniqueResponse(info, voiceType, index, overridePath));
+            responses.emplace_back(UniqueResponse(info, voiceType, index, overridePath, overrideSubtitle));
         }
 
         return responses; 

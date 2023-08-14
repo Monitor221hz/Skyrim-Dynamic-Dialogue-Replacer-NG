@@ -57,6 +57,11 @@ namespace DDR
 
 
             static inline REL::Relocation<decltype(SetResponseFilePath)> _SetResponseFilePath; 
+
+
+            
+            
+
     };
 
     class ResponseHook
@@ -71,17 +76,65 @@ namespace DDR
             _ConstructResponse = trampoline.write_call<5>(target.address() + REL::Relocate(0xDE, 0xDE), ConstructResponse);
         }
 
+
+
         static void AddResponseOverride(UniqueResponse uniqueResponse)
         {
             SKSE::log::info("OverridePath {}", uniqueResponse.overridePath); 
-            ResponseMap.emplace(uniqueResponse, uniqueResponse.overridePath); 
+            ResponseMap.emplace(uniqueResponse); 
         }
         private: 
+
+        //sub_14056D570+DE call sub_14038DE50 SE
+        //sub_140589FE0+DE	call    sub_1403A43D0 AE
 
         static bool ConstructResponse(TESTopicInfo::ResponseData* a_response, char *a_filePath, BGSVoiceType *a_voiceType, TESTopic *a_topic, TESTopicInfo *a_topicInfo);
         static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
 
-        static inline std::unordered_map<UniqueResponse, std::string, UniqueResponseHash> ResponseMap; 
+
+
+            
+            //sub_14056D570+61 SE
+            //sub_140589FE0+61 AE
+
+        
+
+
+        static inline std::unordered_set<UniqueResponse, UniqueResponseHash> ResponseMap; 
+
+    };
+
+    class SubtitleHook
+    {
+        public: 
+
+
+        static void Install()
+        {
+            auto &trampoline = SKSE::GetTrampoline();
+            SKSE::AllocTrampoline(16);
+            REL::Relocation<std::uintptr_t> target{REL::RelocationID(34429, 35249)};
+            _SetSubtitle = trampoline.write_call<5>(target.address() + REL::Relocate(0x61, 0x61), SetSubtitle);
+        }
+
+        static void AddTextOverride(std::string originalSubtitle, std::string newSubtitle)
+        {
+            auto findResult = Subtitles.find(newSubtitle); 
+            auto* textPtr = (findResult == Subtitles.end()) ? &(*Subtitles.insert(newSubtitle).first) : &(*findResult); 
+            TextOverrides.emplace(originalSubtitle, textPtr); 
+        }
+
+        private: 
+
+        static char* SetSubtitle(DialogueResponse* a_response, char* text, int32_t unk); 
+        static inline REL::Relocation<decltype(SetSubtitle)> _SetSubtitle; 
+        
+        static char* GetTextOverride(char* subtitle); 
+        
+
+        
+        static inline std::set<std::string> Subtitles; 
+        static inline std::unordered_map<std::string, const std::string*> TextOverrides; 
 
     };
 

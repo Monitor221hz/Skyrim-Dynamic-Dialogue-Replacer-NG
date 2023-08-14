@@ -34,7 +34,9 @@ namespace DDR
         std::string target(targetPath); 
 
         if (!TemporaryPathOverrides.contains(target)) return targetPath; 
+
         auto* newPath = TemporaryPathOverrides[target]; 
+        if (newPath->empty()) return targetPath; 
 
         SKSE::log::info("{} replaced by {} temporarily", target, *newPath);
         auto* newPathPtr = const_cast<char*>(newPath->c_str()); 
@@ -45,12 +47,33 @@ namespace DDR
     bool ResponseHook::ConstructResponse(TESTopicInfo::ResponseData * a_responseData, char *a_filePath, BGSVoiceType *a_voiceType, TESTopic *a_topic, TESTopicInfo *a_topicInfo)
     {
         bool result = _ConstructResponse(a_responseData, a_filePath, a_voiceType, a_topic, a_topicInfo); 
-        auto response = UniqueResponse(a_topicInfo->GetFormID(), a_voiceType->GetFormID(), a_responseData->responseNumber, "");
+        auto response = UniqueResponse(a_topicInfo->GetFormID(), a_voiceType->GetFormID(), a_responseData->responseNumber, "","");
         if (ResponseMap.contains(response))
         {
-            VoicePathHook::AddTemporaryPathOverride(std::string(a_filePath), UniqueResponse::FormatOverridePath(a_voiceType, a_topicInfo->GetDescriptionOwnerFile(), ResponseMap[response])); 
+            auto *targetResponse = &(*ResponseMap.find(response));
+
+            SubtitleHook::AddTextOverride(a_responseData->responseText.c_str(), targetResponse->overrideSubtitle); 
+            VoicePathHook::AddTemporaryPathOverride(std::string(a_filePath), UniqueResponse::FormatOverridePath(a_voiceType, a_topicInfo->GetDescriptionOwnerFile(), targetResponse->overridePath)); 
         }
-        a_responseData->responseText = "piss"; 
         return result; 
+    }
+    char *SubtitleHook::SetSubtitle(DialogueResponse *a_response, char *text, int32_t unk)
+    {
+        char* newText = GetTextOverride(text); 
+        return _SetSubtitle(a_response, newText, unk); 
+    }
+    char *SubtitleHook::GetTextOverride(char *targetText)
+    {
+        std::string target(targetText); 
+
+        if (!TextOverrides.contains(target)) return targetText; 
+
+        auto* newText = TextOverrides[target]; 
+        if (newText->empty()) return targetText; 
+
+        auto* newTextPtr = const_cast<char*>(newText->c_str()); 
+        TextOverrides.erase(target); 
+
+        return newTextPtr; 
     }
 }

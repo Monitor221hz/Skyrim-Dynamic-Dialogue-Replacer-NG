@@ -18,8 +18,10 @@ namespace DDR
 
         std::string overridePath; 
 
-        UniqueResponse(FormID a_topicInfoID, FormID a_voiceTypeID, uint8_t a_index, std::string path) : topicInfoID(a_topicInfoID), voiceTypeID(a_voiceTypeID), index(a_index)
-        , overridePath(path) {}
+        std::string overrideSubtitle; 
+
+        UniqueResponse(FormID a_topicInfoID, FormID a_voiceTypeID, uint8_t a_index, std::string path, std::string subtitle) : topicInfoID(a_topicInfoID), voiceTypeID(a_voiceTypeID), index(a_index)
+        , overridePath(path), overrideSubtitle(subtitle) {}
 
         static std::vector<UniqueResponse> ParseJson(nlohmann::json jsonObject); 
 
