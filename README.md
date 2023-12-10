@@ -1,45 +1,80 @@
+# The Problem
 
-# CommonLibSSE NG
+Previously, voice file paths for NPC dialogue were tied the voice type, plugin name, quest name, response name, and formID, and the paths were determined at runtime by parsing this data together. This meant modders could not define their own voice file paths but instead use the ones generated for them based on this data.
 
-Because this uses [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG), it supports Skyrim SE, AE, GOG, and VR. 
+There was no easy way to reuse, replace, or add dialogue files without having to copy over, move, and rename these files. This made both modification and creation of dialogue very time consuming and mentally draining to do.
+# The Solution
 
-Hook IDs and offsets must still be found manually for each version.
+DDR provides a flexible alternate method via json file to set voice file paths for any single line of dialogue separately, as well as allowing modders to define custom paths. In addition to this, the framework allows for pluginless edits to subtitle texts.
 
-# Requirements
+The framework allows users to have as much control as desired for what should be replaced; a single replacement for multiple voices in a response, one replacement per voice type in a response, or even replacement for a single part of one response.
 
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (_the free Community edition_)
-- [`vcpkg`](https://github.com/microsoft/vcpkg)
-  - 1. Clone the repository using git OR [download it as a .zip](https://github.com/microsoft/vcpkg/archive/refs/heads/master.zip)
-  - 2. Go into the `vcpkg` folder and double-click on `bootstrap-vcpkg.bat`
-  - 3. Edit your system or user Environment Variables and add a new one:
-    - Name: `VCPKG_ROOT`  
-      Value: `C:\path\to\wherever\your\vcpkg\folder\is`
+It’s all done in a json file format that is readable, easy to understand, and modifiable for the end user.
 
-## Opening the project
+In the future, DDR will be able to replace dialogue based on conditions, surpassing a tedious part of CK development.
 
-Once you have Visual Studio 2022 installed, you can open this folder in basically any C++ editor, e.g. [VS Code](https://code.visualstudio.com/) or [CLion](https://www.jetbrains.com/clion/) or [Visual Studio](https://visualstudio.microsoft.com/)
-- > _for VS Code, if you are not automatically prompted to install the [C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) and [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions, please install those and then close VS Code and then open this project as a folder in VS Code_
+## Disclaimer
 
-You may need to click `OK` on a few windows, but the project should automatically run CMake!
+DDR is still in development and additional features such as conditions are yet to come.
 
-It will _automatically_ download [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) and everything you need to get started making your new plugin!
+## Documentation (for mod authors)
 
-# Project setup
+An example of a valid json document that DDR can read, placed in …\Data\Sound\Voice\DynamicDialogueReplacer
 
-By default, when this project compiles it will output a `.dll` for your SKSE plugin into the `build/` folder.
+Things to note;
 
-If you want to configure this project to output your plugin files
-into your Skyrim Special Edition's "`Data`" folder:
+`Group01` – name of the group container. A wrapper object is required for any replacement object, to keep things organized. Imagine multiple quests and even more dialogue lines, this forces modders to stay neat and readable to users.
 
-- Set the `SKYRIM_FOLDER` environment variable to the path of your Skyrim installation  
-  e.g. `C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition`
+`topicInfo` – the formID and originating plugin.
 
-If you want to configure this project to output your plugin files
-into your "`mods`" folder:  
-(_for Mod Organizer 2 or Vortex_)
+`voiceTypes` – A list of the editorIDs of the voice types that the replacement should include.
 
-- Set the `SKYRIM_MODS_FOLDER` environment variable to the path of your mods folder:  
-  e.g. `C:\Users\<user>\AppData\Local\ModOrganizer\Skyrim Special Edition\mods`  
-  e.g. `C:\Users\<user>\AppData\Roaming\Vortex\skyrimse\mods`
+`responseIndex` – The index of the response form to replace. Usually, speeches or monologues are each broken into multiple files after which they are added alongside each other in CK.
 
+`overridePath` – The path to the voice file that should override the path assigned by the vanilla game. Can be formatted at runtime by putting $ in the beginning, then using the appropriate tag.
 
+`overrideSubtitle` – The subtitle text that should override the text defined in the response.
+
+ 
+```json
+{
+    "responseMap":
+    {
+        "Group01": 
+        {
+            "MikaelSing": 
+            {
+                "topicInfo": "0x5901~Example.esp",
+                "voiceTypes":["MaleYoungEager"],
+                "responseIndex": 1, 
+                "overridePath": "$Data\\Sound\\Voice\\Skyrim.esm\\[VOICE_TYPE]\\Favor013_Favor013PersuadeS_000CD119_1.wav",
+                "overrideSubtitle":"Never gonna give you up. Never gonna let you down. Never gonna run around and desert you."
+            },
+            "GuardSing":
+            {
+                "topicInfo":"0x5904~Example.esp",
+                "voiceTypes":["MaleGuard", "MaleNordCommander", "MaleSoldier", "FemaleNord", "MaleNord", "MaleCommander", "MaleYoungEager"],
+                "responseIndex":1,
+                "overridePath":"$Data\\Sound\\Voice\\[TOPIC_MOD_FILE]\\[VOICE_TYPE]\\DialogueCr_DGCrimePersuade_00109BAC_1.wav",
+                "overrideSubtitle":"Never gonna make you cry, Never gonna say goodbye, Never gonna tell a lie and hurt you."
+            },
+            "MulushAcceptPersuade": 
+            {
+                "topicInfo": "0x00069696~Example.esl",
+                "voiceTypes":["MaleOrc"],
+                "responseIndex": 1, 
+                "overridePath": "$Data\\Sound\\Voice\\[VOICE_MOD_FILE]\\MaleOrc\\Favor013_Favor013PersuadeB_000554D9_1.wav",
+                "_comment":"TIF__000CD114"
+            },
+            "IrnskarrTalk":
+            {
+                "topicInfo": "0x1EE04~Example.esp",
+                "voiceTypes":["Keanu"],
+                "responseIndex": 1, 
+                "overrideSubtitle":"Yeah, I'm thinking I'm back.",
+                "overridePath": "Data\\Test\\wick_01.wav"
+            }
+        }
+    }
+}
+```
