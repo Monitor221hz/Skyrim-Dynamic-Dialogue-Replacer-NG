@@ -360,13 +360,13 @@ namespace FormUtil
 
             static RE::FormID GetFormIDFromMod(std::string relativeFormIDString, std::string modName)
             {
-                if (relativeFormIDString.length() == 0) return -1; 
+                if (relativeFormIDString.length() == 0) return 0x0; 
 
 
                 uint32_t relativeFormID = std::stoi(relativeFormIDString,  0, 16); 
                 auto* dataHandler = TESDataHandler::GetSingleton(); 
 
-                if (!dataHandler) return -1; 
+                if (!dataHandler) return 0x0; 
 
                 return dataHandler->LookupFormID(relativeFormID, modName); 
             }
@@ -374,7 +374,7 @@ namespace FormUtil
             static RE::FormID GetFormIDFromConfigString(std::string str, std::string_view delimiter)
             {
                 std::vector<std::string> splitData = Util::String::Split(str, delimiter); 
-                if (splitData.size() < 2) return -1; 
+                if (splitData.size() < 2) return 0x0; 
                 return GetFormIDFromMod(splitData[0], splitData[1]);
             }
             static RE::FormID GetFormIDFromConfigString(std::string str)

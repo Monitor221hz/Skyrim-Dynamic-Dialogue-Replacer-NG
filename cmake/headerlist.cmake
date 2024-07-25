@@ -5,4 +5,5 @@ set(headers ${headers}
     src/hook.h 
     src/configmanager.h
     src/uniqueresponse.h
+    src/scripthandler.h
 )

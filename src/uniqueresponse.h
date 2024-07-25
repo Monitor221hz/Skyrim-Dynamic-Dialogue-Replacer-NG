@@ -2,13 +2,24 @@
 using namespace RE;
 #include <nlohmann/json.hpp>
 #include "util.h"
+#include "scripthandler.h"
 using FormID = std::uint32_t; 
 namespace DDR
 {
 
     struct UniqueResponse 
     {
+        struct ScriptObject 
+        {
+            public: 
 
+            FormID formID = 0x0; 
+            std::vector<std::string> propertyNames; 
+            ScriptObject() : formID(0x0) {} 
+            ScriptObject(FormID a_formId, std::vector<std::string> a_propertyNames) : formID(a_formId), propertyNames(a_propertyNames) {} 
+
+            void CopyScriptTo(TESTopicInfo* target); 
+        };
         public: 
         FormID topicInfoID; 
 
@@ -20,8 +31,10 @@ namespace DDR
 
         std::string overrideSubtitle; 
 
-        UniqueResponse(FormID a_topicInfoID, FormID a_voiceTypeID, uint8_t a_index, std::string path, std::string subtitle) : topicInfoID(a_topicInfoID), voiceTypeID(a_voiceTypeID), index(a_index)
-        , overridePath(path), overrideSubtitle(subtitle) {}
+        ScriptObject overrideScriptObject; 
+
+        UniqueResponse(FormID a_topicInfoID, FormID a_voiceTypeID, uint8_t a_index, std::string path, std::string subtitle, ScriptObject a_scriptObject) : topicInfoID(a_topicInfoID), voiceTypeID(a_voiceTypeID), index(a_index)
+        , overridePath(path), overrideSubtitle(subtitle), overrideScriptObject(a_scriptObject) {}
 
         static std::vector<UniqueResponse> ParseJson(nlohmann::json jsonObject); 
 
@@ -49,6 +62,8 @@ namespace DDR
 
 
         static std::string FormatOverridePath(BGSVoiceType* voiceType, TESFile* modFile, std::string path); 
+
+        
 
         private: 
 

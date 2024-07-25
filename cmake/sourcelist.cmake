@@ -3,4 +3,5 @@ set(sources ${sources}
     src/hook.cpp
     src/configmanager.cpp
     src/uniqueresponse.cpp
+    src/scripthandler.cpp
 )

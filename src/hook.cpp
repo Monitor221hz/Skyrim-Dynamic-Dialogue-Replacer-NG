@@ -47,11 +47,12 @@ namespace DDR
     bool ResponseHook::ConstructResponse(TESTopicInfo::ResponseData * a_responseData, char *a_filePath, BGSVoiceType *a_voiceType, TESTopic *a_topic, TESTopicInfo *a_topicInfo)
     {
         bool result = _ConstructResponse(a_responseData, a_filePath, a_voiceType, a_topic, a_topicInfo); 
-        auto response = UniqueResponse(a_topicInfo->GetFormID(), a_voiceType->GetFormID(), a_responseData->responseNumber, "","");
+        auto response = UniqueResponse(a_topicInfo->GetFormID(), a_voiceType->GetFormID(), a_responseData->responseNumber, "","", UniqueResponse::ScriptObject());
         if (ResponseMap.contains(response))
         {
             auto *targetResponse = &(*ResponseMap.find(response));
-
+            auto scriptObject = targetResponse->overrideScriptObject;
+            scriptObject.CopyScriptTo(a_topicInfo); 
             SubtitleHook::AddTextOverride(a_responseData->responseText.c_str(), targetResponse->overrideSubtitle); 
             VoicePathHook::AddTemporaryPathOverride(std::string(a_filePath), UniqueResponse::FormatOverridePath(a_voiceType, a_topicInfo->GetDescriptionOwnerFile(), targetResponse->overridePath)); 
         }

@@ -16,6 +16,23 @@ namespace DDR
 
         std::string overridePath = jsonObject.contains("overridePath") ? jsonObject["overridePath"] : ""; 
         std::string overrideSubtitle = jsonObject.contains("overrideSubtitle") ? jsonObject["overrideSubtitle"] : ""; 
+        std::string overrideScriptObjectRecord = "";
+        ScriptObject overrideScriptObject; 
+        if ( jsonObject.contains("overrideScript") ) 
+        {
+            auto& overrideScriptObjectObject = jsonObject["overrideScript"];
+            overrideScriptObjectRecord = overrideScriptObjectObject["record"]; 
+
+            auto objectID =  FormUtil::Form::GetFormIDFromConfigString(overrideScriptObjectRecord); 
+
+            auto& propertyList = overrideScriptObjectObject["copyProperties"];
+
+            overrideScriptObject.propertyNames = propertyList; 
+            overrideScriptObject.formID = objectID; 
+            
+        }
+
+
         for (auto &entry : voiceNameArray)
         {
             
@@ -23,7 +40,7 @@ namespace DDR
             voiceType = (voiceType == -1 && entry.contains('~')) ? FormUtil::Form::GetFormIDFromConfigString(entry): voiceType; 
 
                 
-            responses.emplace_back(UniqueResponse(info, voiceType, index, overridePath, overrideSubtitle));
+            responses.emplace_back(UniqueResponse(info, voiceType, index, overridePath, overrideSubtitle, overrideScriptObject));
         }
 
         return responses; 
@@ -53,5 +70,17 @@ namespace DDR
         }
 
         return Util::String::Join(sections, "\\"sv); 
+    }
+    void UniqueResponse::ScriptObject::CopyScriptTo(TESTopicInfo *target)
+    {
+        if (formID == 0x0) return; 
+
+        auto* dataHandler = TESDataHandler::GetSingleton(); 
+        if (!dataHandler) return; 
+
+        auto* form = TESForm::LookupByID(formID);
+        if (form->GetFormType() != FormType::Info) return; 
+
+        ScriptHandler::AttachDuplicatePropertyScript(target, form, propertyNames);  
     }
 }
